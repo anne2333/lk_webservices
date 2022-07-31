@@ -22,6 +22,6 @@ exports.upload = (req, res) => {
     //上传失败
     if (result.affectedRows !== 1) return res.cc('上传图片失败')
     console.log(imageInfo.url);
-    res.cc('/uploads/articles/content/' + req.file.filename, 0)
+    res.cc('http://127.0.0.1:8080/uploads/articles/content/' + req.file.filename, 0)
   })
 }

@@ -32,8 +32,11 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }))
 app.use(jwt({
   secret: config.jwtSecretKey,
   algorithms: ["HS256"],
-}).unless({ path: [/^\/api\//] }))
+}).unless({ path: [/^\/(api|uploads)\//] }))
 
+
+//托管静态文件
+app.use('/uploads', express.static('./uploads'))
 
 
 //导入路由模块
