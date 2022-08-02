@@ -1,6 +1,7 @@
 // 导入数据库操作模块
 const db = require('../db/index')
 const path = require('path')
+const fs = require('fs')
 
 // 发布新文章的处理函数
 exports.addArticle = (req, res) => {
@@ -30,6 +31,23 @@ exports.addArticle = (req, res) => {
         // 发布文章成功
         res.cc('发布文章成功', 0)
     })
+}
+
+//获取文章列表
+exports.getTopThreeArticles = (req, res) => {
+    var sql = `SELECT * FROM zy_web_db.ev_articles o WHERE 3 >
+    (SELECT count(*)  FROM zy_web_db.ev_articles d WHERE d.cate_name=o.cate_name and d.pub_date>o.pub_date) ORDER BY o.cate_name,  o.pub_date DESC`
+    db.query(sql, function (err, result) {
+        //执行sql失败
+        if (err) return res.cc(err)
+        res.send({
+            status: 0,
+            message: '获取前三条文章列表成功',
+            // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
+            data: result,
+        })
+    })
+
 }
 
 //获取文章列表
@@ -76,4 +94,59 @@ exports.deleteArticle = (req, res) => {
         // 删除文章分类成功
         res.cc('删除文章成功！', 0)
     })
+}
+
+//根据id获取文章
+exports.getArticleById = (req, res) => {
+    const sql = `select * from  ev_articles where is_delete=0 and id=?`
+    db.query(sql, req.params.id, (err, result) => {
+        // 执行 SQL 语句失败
+        if (err) return res.cc(err)
+        if (result.length <= 0) res.cc('获取文章失败')
+        // 获取文章分类成功
+        res.send({
+            status: 0,
+            message: '获取文章成功',
+            // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
+            data: result,
+        })
+    })
+}
+
+
+//更新文章
+exports.updateArticleById = (req, res) => {
+    if (!req.file || req.file.fieldname !== 'cover_img') return res.cc('未上传文章封面')
+    const articleInfo = {
+        // 标题、内容、状态、所属的分类Id
+        ...req.body,
+        // 文章封面在服务器端的存放路径
+        cover_img: path.join('/uploads/articles/cover', req.file.filename),
+        // 文章发布时间
+        pub_date: new Date(),
+        // 文章作者的Id
+        author_id: req.auth.id,
+    }
+    const _sql = `select cover_img from ev_articles where id=?`
+    db.query(_sql, articleInfo.id, (err, result) => {
+        // 执行 SQL 语句失败
+        if (err) return res.cc(err)
+        try {
+            fs.unlink(path.join(__dirname + '/../' + result[0].cover_img), function (err) {
+            })
+        } catch (error) {
+        }
+
+        const sql = `update ev_articles set ? where id=?`
+        db.query(sql, [articleInfo, articleInfo.id], (err, results) => {
+            // 执行 SQL 语句失败
+            if (err) return res.cc(err)
+            // SQL 语句执行成功，但是影响行数不等于 1
+            if (results.affectedRows !== 1) return res.cc('更新文章失败！')
+
+            // 更新文章分类成功
+            res.cc('更新文章成功！', 0)
+        })
+    })
+
 }

@@ -50,7 +50,7 @@ app.use('/my', userInfoRouter)
 
 const articleRouter = require('./router/articles')
 // 为文章的路由挂载统一的访问前缀 /my/article
-app.use('/my/article', articleRouter)
+app.use('/', articleRouter)
 
 //图片上传
 const uploadImage = require('./router/image')

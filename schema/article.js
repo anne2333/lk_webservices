@@ -21,9 +21,20 @@ exports.add_article_schema = {
 // 验证规则对象 - 获取文章列表
 
 
-//删除文章分类规则
+//删除文章规则
 module.exports.delete_article_schema = {
     params: {
         id
     }
+}
+
+//更新文章规则
+module.exports.update_article_schema = {
+    body: {
+        id,
+        title,
+        cate_name,
+        content,
+        state,
+    },
 }
