@@ -15,4 +15,6 @@ const upload = multer({ dest: path.join(__dirname, '../uploads/articles/content'
 const image_handler = require('../router_handler/image')
 router.post('/', upload.single('image'), image_handler.upload)
 
+router.post('/delete', image_handler.delete)
+
 module.exports = router

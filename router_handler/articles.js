@@ -11,7 +11,7 @@ exports.addArticle = (req, res) => {
         // 标题、内容、状态、所属的分类Id
         ...req.body,
         // 文章封面在服务器端的存放路径
-        cover_img: path.join('/uploads/articles/cover', req.file.filename),
+        cover_img: path.join('/uploads/articles/cover', req.file.filename + req.file.mimetype.replace('image/', '.')),
         // 文章发布时间
         pub_date: new Date(),
         // 文章作者的Id
@@ -19,7 +19,6 @@ exports.addArticle = (req, res) => {
     }
     const sql = `insert into ev_articles set ?`
     // 导入数据库操作模块
-
     // 执行 SQL 语句
     db.query(sql, articleInfo, (err, results) => {
         // 执行 SQL 语句失败
@@ -36,8 +35,8 @@ exports.addArticle = (req, res) => {
 //获取文章列表
 exports.getTopThreeArticles = (req, res) => {
     var sql = `SELECT * FROM zy_web_db.ev_articles o WHERE 3 >
-    (SELECT count(*)  FROM zy_web_db.ev_articles d WHERE d.cate_name=o.cate_name and d.pub_date>o.pub_date) ORDER BY o.cate_name,  o.pub_date DESC`
-    db.query(sql, function (err, result) {
+    (SELECT count(*)  FROM zy_web_db.ev_articles d WHERE d.cate_name=o.cate_name and d.pub_date>o.pub_date and is_delete=0) and is_delete=0 and cate_name=? ORDER BY o.cate_name,  o.pub_date DESC`
+    db.query(sql, req.params.cate_name, function (err, result) {
         //执行sql失败
         if (err) return res.cc(err)
         res.send({
@@ -50,7 +49,7 @@ exports.getTopThreeArticles = (req, res) => {
 
 }
 
-//获取文章列表
+//后台获取文章列表
 exports.getArticleList = (req, res) => {
     var q = req.query
     var sql = `select count(*) count from ev_articles where is_delete=0 `
@@ -72,6 +71,32 @@ exports.getArticleList = (req, res) => {
             res.send({
                 status: 0,
                 message: '获取文章列表成功',
+                // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
+                data: result,
+                total
+            })
+        })
+    })
+
+}
+
+exports.getList = (req, res) => {
+    var q = req.query
+    var sql = `select count(*) count from ev_articles where is_delete=0 and  cate_name='` + q.cate_name + `' ORDER BY  pub_date DESC`
+    db.query(sql, function (err, result) {
+        //执行sql失败
+        if (err) return res.cc(err)
+        var total = result[0]['count']
+        var start = (q.pagenum - 1) * 6
+        var _sql = `select  *  from ev_articles  where is_delete=0 and  cate_name='` + q.cate_name + `' ORDER BY  pub_date DESC limit ` + start + `  , 6  `
+
+        db.query(_sql, function (err, result) {
+            //执行sql失败
+            if (err) return res.cc(err)
+            res.send({
+                status: 0,
+                message: '获取文章列表成功',
+                pagenum: q.pagenum,
                 // 为了方便客户端使用 Token，在服务器端直接拼接上 Bearer 的前缀
                 data: result,
                 total
@@ -121,9 +146,8 @@ exports.updateArticleById = (req, res) => {
         // 标题、内容、状态、所属的分类Id
         ...req.body,
         // 文章封面在服务器端的存放路径
-        cover_img: path.join('/uploads/articles/cover', req.file.filename),
+        cover_img: path.join('/uploads/articles/cover', req.file.filename + req.file.mimetype.replace('image/', '.')),
         // 文章发布时间
-        pub_date: new Date(),
         // 文章作者的Id
         author_id: req.auth.id,
     }

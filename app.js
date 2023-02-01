@@ -2,10 +2,9 @@
 const express = require('express')
 const joi = require('joi')
 const config = require('./config')
+
 //解析token的中间件
 const { expressjwt: jwt } = require('express-jwt')
-
-
 
 // 创建 express 的服务器实例
 const app = express()
@@ -52,10 +51,13 @@ const articleRouter = require('./router/articles')
 // 为文章的路由挂载统一的访问前缀 /my/article
 app.use('/', articleRouter)
 
-//图片上传
+//文章图片上传
 const uploadImage = require('./router/image')
 app.use('/my/upload/image', uploadImage)
 
+//产品图片上传
+const uploadProducts = require('./router/products')
+app.use('/', uploadProducts)
 
 //错误级别中间件
 app.use((err, req, res, next) => {

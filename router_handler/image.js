@@ -2,6 +2,7 @@
 const db = require('../db/index')
 const path = require('path')
 const config = require('../config')
+const fs = require('fs')
 
 
 exports.upload = (req, res) => {
@@ -22,7 +23,20 @@ exports.upload = (req, res) => {
     if (err) return res.cc(err)
     //上传失败
     if (result.affectedRows !== 1) return res.cc('上传图片失败')
-    console.log(imageInfo.url);
     res.cc(config.URL + '/uploads/articles/content/' + req.file.filename, 0)
   })
 }
+
+exports.delete = (req, res) => {
+  var list = req.body.list.split('|')
+  for (var i = 0; i < list.length - 1; i++) {
+    var p = path.join(__dirname, '../uploads/articles/content/', list[i])
+    try {
+      fs.unlinkSync(p)
+    } catch (error) {
+
+    }
+
+  }
+}
+
